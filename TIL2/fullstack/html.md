@@ -757,7 +757,32 @@ id 속성은 유일한 값을 가져야 하며, class 속성은 중복 가능한
 
 ### 실습
 
+#### float
+
+- 그림과 글자의 배치, 레이아웃 기능을 사용
+- 속성
+  - left : 태그를 왼쪽에 배치
+  - right : 태그를 오른쪽에 배치
+  - none : 태그를 띄우지 않음
+  - inherit : 부모 태그로부터 상속
+- float 사용 시 `display` 무시됨 -> float에 따라 배치가 바뀌게 됨(inline, block기반 무관)
+
+#### Clear
+
+- float 사용 시 배치의 흐름이 바뀌는데, 이를 원래대로 돌려줌
+
+- 속성
+  - none: clear 설정을 하지 않음
+  - left: 왼쪽을 취소
+  - right: 오른쪽을 취소
+  - both: 양쪽 다 취소
+
 ```css
+header {
+    background-color: #006699;
+    color: #FFFFFF;
+}
+
 .title {
     display: inline;
 }
@@ -765,27 +790,278 @@ id 속성은 유일한 값을 가져야 하며, class 속성은 중복 가능한
 .list{
     display: inline;
     position: absolute;
-    left:500px;
-    bottom:15px;
+    right :5px;
+    bottom:30px;
+    text-align: right;
 
 }
 
 .list-item {
-    display: inline; /*원래는 속성이 block이었음*/
-}
+    display: inline-block; /*원래는 속성이 block이었음*/
+    width: 200px;
+    text-transform: uppercase;
+    font-size:20px;
+}/*inline 속성은 너비 width를 가질 수 없음->inline block속성 가져야 가능*/
+/*inline이면서 block속성을 갖는 것이 inline-block*/
 
 .container{
-    border:1px dashed blue;
-    position: relative; /*태그의 위치를 설정. */
     
+    position: relative; /*태그의 위치를 설정. */
+
+    margin-top:20px;
+    margin-bottom:20px;
+    padding-top:20px;
+    padding-bottom:20px;
 }
 
 .span {
    /* position: static; 원래 기본값이 스테틱이라 변경되는 건 없음*/
   /* position: relative; 원래 자기 자신 위치에서 변경*/
    position : absolute; /*상위 태그가 static이면 안되므로 container를 변경*/
-   top:30px;
+   top:40px;
    left: 180px;
 }
+
+/*float 이용한 레이아웃 설정*/
+
+#column1 {
+    float:left;
+    width:30%;/*왼쪽의 삼십프로 차지하게끔*/    
+}
+
+.column2 {
+    float:left;
+    width:30%;
+}
+.column3 {
+    float:left;
+    width:30%;
+}
+
+.footer {
+    clear:left;
+}
 ```
+
+### 게시판 만들기 실습
+
+직접해본것-로그인 board1.html, board1.css
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel='stylesheet' type='text/css' href='../css/board_style1.css' /> 
+</head>
+
+<body>
+    <p>아이디</p>
+    <input type ='id'><br>
+
+    <p>패스워드</p>
+    <input type ='password'><br>
+
+
+    <input type='submit' value='로그인'/>
+</body>
+</html>
+```
+
+```css
+html{
+    display: inline;
+}
+
+
+body {
+    border: 3px solid blue;
+    margin:350px;
+    padding:30px;
+
+}
+```
+
+직접해본것-게시글 board2.html, board2.css
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel='stylesheet' type='text/css' href='../css/board_style2.css' /> 
+</head>
+
+<body>
+    <h1>게시글</h1>
+    <table border=1>   <!-- 테이블의 시작 -->
+        <thead> <!-- 제목 라인 --> 
+          <tr>  <!-- 행을 표현 -->
+            <th>날짜</th>
+            <th>작성자</th>
+            <th>제목</th>  <!-- 컬럼 --> 
+          </tr>
+        </thead>
+      
+        <tbody> <!--표에 들어갈 내용-->
+            <tr> <!--1행, table row-->
+                <td>2020.12.21</td>
+                <td>hhw</td>
+                <td>수업 관련 공지사항 안내드립니다.</td>
+
+            </tr>
+            <tr> <!--1행, table row-->
+                <td>2020.12.20</td>
+                <td>hgw</td>
+                <td>시험 관련하여 공지사항 알려드립니다.</td>
+
+            </tr>
+        </tbody>
+      </table>  <!-- 테이블의 끝 -->
+
+</body>
+</html>
+```
+
+```css
+table{
+    border: 2px solid red;
+}
+```
+
+직접해본것-게시글작성 board3.html, board3.css
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel='stylesheet' type='text/css' href='../css/board_style3.css' /> 
+</head>
+
+<body>
+  <p>날짜</p>
+  <input type ='date'><br><br>
+  <p>이름</p>
+  <input type ='name'><br><br>
+  <p>제목</p>
+  <input type ='title'><br><br>
+  <p>내용</p>
+  <textarea rows="15" cols="80"></textarea><br>
+  <input type='submit' value='작성'/>
+</body>
+</html>
+```
+
+```css
+html{
+    display:inline;
+}
+```
+
+http://bootstrapk.com/css/#overview
+
+#### 붓스트랩 사용하여 만들기
+
+로그인 login.html
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel='stylesheet' type='text/css' href='../css/bootstrap.min.css' /> 
+    <link rel='stylesheet' type='text/css' href='../css/bootstrap-theme.min.css' /> 
+    <link rel='stylesheet' type='text/css' href='../css/login.css' />
+</head>
+
+<!--붓스트랩사용-->
+<body>
+    <div class='container'> <!--가운데정렬-->
+     <form class='form-horizontal' method='post' action=''>
+        <div class='form-group'>
+            <label for='inputId' class='col-sm-2 col-xs-2 control-label'>ID</label>
+            <div class='col-md-4 col-xs-6'> <!--그리드시스템-->
+                <input class='form-control' type='text' name='id' id='inputId'>
+            </div>
+        </div>
+        <div class='form-group'>
+            <label for='inputPw' class='col-sm-2 col-xs-2 control-label'>PW</label>
+            <div class='col-md-4 col-xs-6'>
+                <input class='form-control' type='password' name='pw' id='inputPw'>
+            </div>
+            
+        </div>
+        <div class='form-group'>
+            <div class='col-xs-offset-2 col-sm-offset-2 col-xs-10 col-sm-10'>
+                <button class = 'btn btn-default' type='submit'>로그인</button>
+            </div>
+             
+        </div>
+        
+     </form>
+    </div>
+</body>
+</html>
+```
+
+login.css
+
+```css
+html, body{ /*가운데로 설정*/
+    height:100%;
+}
+body{
+    display:flex;
+    align-items:center;
+    height:100%;
+    padding-left:400px;
+}
+.form-control{
+    width:300px;
+}
+```
+
+게시글 list.html(직접 만든 것과 거의 동일)
+
+
+
+게시글쓰기 wirte.html
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel='stylesheet' type='text/css' href='../css/bootstrap.min.css' /> 
+    <link rel='stylesheet' type='text/css' href='../css/bootstrap-theme.min.css' /> 
+</head>
+
+<body>
+    <div class='container'>
+        <form>
+            <div class='row'>
+                <div class='col-md-4'>
+                    <input type='date' class='col-md-4'>
+                </div>
+            </div>
+
+            <div class='row'>
+                <div class='col-md-4'>
+                    <input type ='text' class='col-md-4'>
+
+                </div>
+                    
+            </div>
+
+            <div class='row'>
+                <div class='col-md-4'>
+                    <textarea class='form-control' rows='20'></textarea>
+                </div>
+                    
+            </div>
+            
+        </form>
+</body>
+</html>
+```
+
+
+
+
 
