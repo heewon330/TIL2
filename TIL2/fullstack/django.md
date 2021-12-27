@@ -1,3 +1,5 @@
+# Django 시작
+
 장고 프로젝트 만들기
 
 ```django
@@ -45,7 +47,9 @@ MVC 구조
 
 
 
-앱 설치
+## Django 프로젝트
+
+### 앱 설치
 
 settings.py에 추가
 
@@ -67,7 +71,7 @@ INSTALLED_APPS += [
 
 
 
-URL 설정(p.127)
+### URL 설정(p.127)
 
 - index.html과 url을 연결
 - urls.py에서 설정
@@ -93,7 +97,7 @@ urlpatterns = [
 
 
 
-하위 URLconf
+### 하위 URLconf
 
 - 최상위 URLconf로부터 연결된다면 -> 해당 앱에 따로 'urls.py' 만들어줌
 
@@ -116,7 +120,7 @@ urlpatterns = [
 
 
 
-view 작성
+views.py에 작성
 
 - view는 제어 역할을 함
 - 템플릿과 모델 등의 연결 역할을 함
@@ -135,7 +139,7 @@ def index(request):
 
 
 
-모델 만들기
+### 모델 만들기
 
 - 할 일을 저장할 테이블은 '`models.py`'을 통해 작성
 - 테이블 =pandas 'DataFrame'
@@ -155,7 +159,7 @@ class Todo(models.Model): #models 모듈 내에 Model 클래스 받음
 
  
 
-모델 적용
+### 모델 적용
 
 - 만들어진 모델을 실제 db에 반영
 - 모델을 변경시킨 내용과 변경사항을 장고에 알려줌
@@ -170,13 +174,13 @@ python manage,py makemigrations 앱이름
 python manage.py migrate
 ```
 
-테이블 속성 확인
+### 테이블 속성 확인
 
 ![image-20211223160626774](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20211223160626774.png)
 
 
 
-createTodo 기능 추가
+### createTodo 기능 추가
 
 - 전달받은 할일을 디비에 저장
   - URL 과 view 연결
@@ -224,7 +228,7 @@ def createTodo( request):
 
 
 
-DB에 저장하기
+### DB에 저장하기
 
 ToDoList\my_to_do_app\urls.py
 
@@ -277,7 +281,7 @@ def createTodo( request):
 
 
 
-브라우저에 보이게 하려면?
+### 브라우저에 보이게 하려면?
 
 view.py
 
@@ -290,5 +294,159 @@ def index(request):
     
     return render( request, 'my_to_do_app/index.html',content)
 
+```
+
+
+
+
+
+# 실습
+
+## URL 연결하기
+
+**workspace\board\board\urls.py**
+
+```python
+from django.contrib import admin
+from django.urls import path
+from django.urls.conf import include
+
+urlpatterns = [
+    path('board/',include('board_app.urls')), 
+
+    path('admin/',admin.site.urls),
+]
+```
+
+- 기본 설정값 237.0.0.1:8000/board/
+
+
+
+**workspace\board\board_app\urls.py**
+
+```python
+urlpatterns = [
+    path('', views.index),
+    path('login/', views.index2),
+    path('write/', views.index3),
+
+]
+```
+
+- url에 /board/login/, /board/write/가 뜰 수 있게끔 설정
+- 설정이 안되어있는 경우엔 그냥 /board/
+
+
+
+**workspace\board\board_app\views.py**
+
+```python
+def index(request):
+    return render(request,'board_app/list.html')
+
+def index2(request):
+    return render(request,'board_app/login.html')
+
+def index3(request):
+    return render(request,'board_app/write.html')
+```
+
+- index함수들을 만들어서 해당되는 url과 연결
+
+
+
+## STATIC 
+
+**static 폴더 설정 -settings.py**
+
+```python
+STATIC_URL = 'static/'
+
+STATICFILES_DTRS=[
+
+  BASE_DIR / 'static'
+
+]
+```
+
+**static 폴더를 바디(board) 폴더에 만들기**
+
+
+
+
+
+### Table 만들어서 DB 저장
+
+**클래스 정의**
+
+board\board_app\models.py
+
+```python
+from django.db import models
+
+# Create your models here.
+# ORM(Object Relation mapping)
+
+class board( models.Model) : #모델 클래스 상속
+    createDate = models.DataField() #작성 날짜
+    writer= models.CharField(max_length=128) #작성자
+    subject = models.CharField(max_length=255) #글 제목
+    content = models.TextField() 
+```
+
+**DB migration**
+
+```
+(multicampus) C:\hw\workspace\board>python manage.py migrat
+```
+
+**DB 입력& 저장**
+
+```
+>>> from board_app.models import board
+         --------  ------        -----
+         package    module        modules에 정의된 board 클래스
+         
+         
+(multicampus) C:\hw\workspace\board>python manage.py shell
+
+>>> import datetime
+>>> b = board(createDate=datetime.date.today(), writer='me', subject='hello', content='bye')
+>>> b.save()
+
+>>> board.objects.all()
+<QuerySet [<board: board object (1)>]>
+>>> board.objects.filter(id=1)
+<QuerySet [<board: board object (1)>]>
+>>> board.objects.filter(id=10)
+<QuerySet []>
+>>>
+
+>>> b=board(createDate=datetime.date.today(), writer='jhw', subject='hello', content='다음입력')
+>>> b.content
+'다음입력'
+>>> b.createDate
+datetime.date(2021, 12, 27)
+>>> b.save()
+>>> board.objects.all()
+<QuerySet [<board: board object (1)>, <board: board object (2)>]>
+```
+
+**글 제목만 얻고 싶다? - 루프문 사용**
+
+```
+>>> for b in board.objects.all():
+...     print(b.subject)
+... 
+hello
+hello
+>>>
+```
+
+**원하는 객체 하나 뽑아오기**
+
+```
+>>> board.objects.get(id=1)
+<board: board object (1)>
 ```
 
