@@ -49,6 +49,8 @@ MVC 구조
 
 ## Django 프로젝트
 
+(책 117쪽-163쪽)
+
 ### 앱 설치
 
 settings.py에 추가
@@ -279,8 +281,6 @@ def createTodo( request):
 
 
 
-
-
 ### 브라우저에 보이게 하려면?
 
 view.py
@@ -293,16 +293,102 @@ def index(request):
     content={'todos':todos}
     
     return render( request, 'my_to_do_app/index.html',content)
+```
 
+### 삭제 delete
+
+책 169쪽
+
+**삭제하고 싶은 id 전달**
+
+- get : 데이터를 전달할 때 URL을 통해서 전달
+
+```
+Request Method:	GET
+Request URL:	http://127.0.0.1:8000/doneTodo/?todoNum=4
+```
+
+- post : form이 꼭 있어야만 함. 없으면 전달 불가능
+
+shell에서 데이터 확인
+
+```
+>>> from my_to_do_app.models import Todo
+>>> Todo.objects.all()
+<QuerySet [<Todo: Todo object (1)>, <Todo: Todo object (2)>, <Todo: Todo object (3)>, <Todo: Todo object (4)>, <Todo: Todo object (5)>, <Todo: Todo object (6)>]>
+```
+
+**조건에 맞는 객체들만 가져오기**
+
+1. filter
+
+- `query set`  가져옴
+- 조건에 맞는게 여러개여도 하나만 가져옴
+
+```
+>>> Todo.objects.filter(id=1)
+<QuerySet [<Todo: Todo object (1)>]>
+```
+
+2. get 
+
+- `객체`를 가져옴
+- 조건에 맞는 여러개가 있으면 여러개 다 가져옴
+
+```
+>>> Todo.objects.get(id=1)
+<Todo: Todo object (1)>
+```
+
+**삭제**
+
+```
+>>> obj=Todo.objects.get(id=1)
+>>> obj.delete()
+(1, {'my_to_do_app.Todo': 1})
+>>> Todo.objects.all()
+<QuerySet [<Todo: Todo object (2)>, <Todo: Todo object (3)>, <Todo: Todo object (4)>, <Todo: Todo object (5)>, <Todo: Todo object (6)>]>
+```
+
+### Update 데이터 수정
+
+```
+>>> obj=Todo.objects.get(id=5)
+>>> obj.content='수정해봄'      
+>>> obj.save()
+```
+
+
+
+ToDoList\my_to_do_app\urls.py
+
+```python
+urlpatterns = [
+    path('', views.index, name='index'), #인덱스 설정
+      #createTodo에 대한 URL 요청과 view의 createTodo 함수를 연결 
+    path('createTodo/', views.createTodo),
+    path('deleteTodo/', views.deleteTodo),
+]
+```
+
+ToDoList\my_to_do_app\views.py
+
+```python
+def deleteTodo(request):
+    print('요청변수 :', request.GET['todoNum'])
+    todo = Todo.objects.get(id=request.GET['todoNum'])
+    todo.delete()
+
+    return HttpResponseRedirect(reverse('index'))
 ```
 
 
 
 
 
-# 실습
+## Board 실습
 
-## URL 연결하기
+### URL 연결하기
 
 **workspace\board\board\urls.py**
 
@@ -355,7 +441,7 @@ def index3(request):
 
 
 
-## STATIC 
+### STATIC 
 
 **static 폴더 설정 -settings.py**
 
@@ -430,7 +516,16 @@ datetime.date(2021, 12, 27)
 >>> b.save()
 >>> board.objects.all()
 <QuerySet [<board: board object (1)>, <board: board object (2)>]>
+-----------------------------------------------------------------
+board클래스 타입의 객체를 원소로 가지고 있는 리스트를 반환(리스트는 이터레이블)=>쿼리셋도 이터레이블
+
 ```
+
+- 반복 가능한 객체가 존재하기 때문에(반복문으로 가져다가 쓸 수 있음) 이터레이블
+- 각 객체 자체들이 테이블의 로우들이 된다! = ORM(Object Relation Mapping)
+  - "객체를 관계형 테이블과 매핑한 것"  **클래스.objects.all()**
+
+
 
 **글 제목만 얻고 싶다? - 루프문 사용**
 
@@ -441,6 +536,8 @@ datetime.date(2021, 12, 27)
 hello
 hello
 >>>
+-------------------------------------
+이터레이블 객체를 가져오는 루프문
 ```
 
 **원하는 객체 하나 뽑아오기**
@@ -449,4 +546,248 @@ hello
 >>> board.objects.get(id=1)
 <board: board object (1)>
 ```
+
+**DBshell로 데이터베이스 확인 가능**
+
+```
+(multicampus) C:\hw\workspace\board>python manage.py dbshell
+SQLite version 3.36.0 2021-06-18 18:36:39
+Enter ".help" for usage hints.
+
+sqlite> .tables
+auth_group                  board_app_board
+auth_group_permissions      django_admin_log
+auth_permission             django_content_type
+auth_user                   django_migrations
+auth_user_groups            django_session
+auth_user_user_permissions
+
+sqlite> select * from board_app_board;
+1|2021-12-27|me|hello|bye
+2|2021-12-27|jhw|hello|다음입력
+3|2021-12-28|jwe|hi|next
+```
+
+sqlite(dbshell)를 사용할 때는 sql을 사용 => but orm으로 이용해서 객체를 다룰 수 있으므로 sql 몰라도 상관은 없음 -> **클래스.objects.all()** 이런 형태가 ORM이다~
+
+
+
+### 게시글을 작성해서 게시판에 올리고 싶다면?
+
+**<a = href='board/write'>**
+
+```html
+      <a href="board/write/">
+        <button type="submit" class="btn btn-primary">게시글 작성하기</button>
+      </a>
+```
+
+**write.html**
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    {% load static %}
+    <link type='text/css' rel='stylesheet' href='{% static "bootstrap.min.css" %}' />
+    <link type='text/css' rel='stylesheet' href='{% static "bootstrap-theme.min.css" %}' />
+    <link type='text/css' rel='stylesheet' href='{% static "list.css" %}' />
+
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">아주 간단한 게시판</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <div class="navbar-form navbar-right">
+            <button type="submit" class="btn btn-info">Sign in</button>
+            <button type="submit" class="btn btn-success">Sign up</button>
+          </div>
+        </div><!--/.navbar-collapse -->
+      </div>
+    </nav>
+
+    <hr> <!--가로선-->
+
+    <div class='container'>
+      <form action='../create' method='POST'> <!--제출하면 넘어가는 페이지 설정-->
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="exampleInputPassword1">작성 날짜</label>
+          <input type="date" class="form-control" id='now_date'>
+          <script>
+            document.getElementById('now_date').valueAsDate = new Date();
+          </script>
+         
+         
+        </div>
+        <div class="form-group">
+          <label for="exampleInputEmail1">작성자</label>
+          <input type="text" class="form-control" placeholder="작성자">
+        </div>
+        <div class="form-group">
+          <label for="exampleInputPassword1">글 제목</label>
+          <input type="text" class="form-control" >
+        </div>
+        <div class="form-group">
+          <label for="exampleInputFile">게시글</label>
+          <textarea class="form-control" rows=10></textarea>
+        <button type="submit" class="btn btn-default">등록</button>
+      </form>
+    </div>
+  </body>
+
+</html>
+```
+
+**create와 연결하기**
+
+write.html에 작성
+
+```
+{% csrf_token %}
+```
+
+board\board_app\urls.py
+
+```python
+from django.urls import path
+from django.urls.conf import include
+from . import views
+
+urlpatterns = [
+    path('', views.index),
+    path('write/', views.index3),
+    path('create', views.create),
+
+]
+```
+
+board\board_app\views.py
+
+```python
+from django.shortcuts import render
+from django.http import HttpResponse
+
+# Create your views here.
+
+def index(request):
+    return render(request,'board_app/list.html')
+
+def index3(request):
+    return render(request,'board_app/write.html')
+
+def create(request):
+    return HttpResponse('게시글을 생성합니다')
+```
+
+### DB에 저장
+
+board\board_app\views.py -> create함수 참고
+
+```python
+from django.shortcuts import render
+from django.http import HttpResponse,HttpResponseRedirect
+from django.urls import reverse
+
+from board_app.models import board
+
+# Create your views here.
+
+def index(request):
+    return render(request,'board_app/list.html')
+
+def index3(request):
+    return render(request,'board_app/write.html')
+
+# create 이용해 데이터베이스 저장하기!
+def create( request):
+    createDate=request.POST['createDate']
+    writer=request.POST['user']
+    subject=request.POST['subject']
+    content=request.POST['content']
+
+    new_list = board(createDate=createDate, writer=writer, subject=subject, content=content)
+    new_list.save()
+
+    print(createDate)
+    print(writer)      #이 값들은 터미널로 출력됨
+
+    return HttpResponse('게시글을 생성합니다')
+```
+
+dbshell로 확인
+
+```
+(multicampus) C:\hw\workspace\board>python manage.py dbshell
+SQLite version 3.36.0 2021-06-18 18:36:39
+Enter ".help" for usage hints.
+sqlite> select * from board_app_board
+   ...> ;
+1|2021-12-27|me|hello|bye
+2|2021-12-27|jhw|hello|다음입력
+3|2021-12-28|jwe|hi|next
+4|2021-12-28|11|11|1
+5|2021-12-28|gd|asdf|asdfasdfasf
+6|2021-12-28|fdd|asdf|afffff
+7|2021-12-28|fdd|asdf|afffff
+```
+
+### DB에 있는 값들을 리스트로 가지고 오기
+
+board\board_app\views.py
+
+```python
+def index(request):
+    #db의 board 테이블의 모든 내용을 가져옴
+    rows=board.objects.all()
+    content={'rows':rows}
+    
+    return render(request,'board_app/list.html', content)
+```
+
+list.html -> **객체출력**
+
+```html
+    <!--템플릿 태그-->
+    {{ rows }} <!--인덱스 함수에 설정해놓은 rows 객체를 출력, 쿼리셋을 가져옴-->
+
+    {% for row in rows %}
+      <p>{{ row.createDate }}</p>
+      <p>{{ row.writer }}</p>
+      <p>{{ row.subject }}</p>
+      <p>{{ row.content }}</p>
+    {% endfor %}
+```
+
+표에 적용하기
+
+```html
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td> {{ forloop.counter }} </td>
+            <td> {{ row.createDate }} </td>
+            <td> {{ row.writer }} </td>
+            <td> {{ row.content }} </td>
+            <td>
+              <button type="submit" class="btn btn-warning">수정</button>
+            </td>
+            <td>
+              <button type="submit" class="btn btn-danger">삭제</button>
+            </td>
+          </tr>
+          {% endfor %}
+```
+
+![image-20211228152255315](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20211228152255315.png)
+
+
 
