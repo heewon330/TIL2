@@ -776,7 +776,7 @@ list.html -> **객체출력**
             <td> {{ forloop.counter }} </td>
             <td> {{ row.createDate }} </td>
             <td> {{ row.writer }} </td>
-            <td> {{ row.content }} </td>
+            <td> {{ row.subject }} </td>
             <td>
               <button type="submit" class="btn btn-warning">수정</button>
             </td>
@@ -790,4 +790,117 @@ list.html -> **객체출력**
 ![image-20211228152255315](C:\Users\user\AppData\Roaming\Typora\typora-user-images\image-20211228152255315.png)
 
 
+
+### 삭제 버튼
+
+list.html
+
+```html
+<form action='delete/', method='POST'>
+ {% csrf_token %}
+ <input type='hidden' name=id value={{row.id}}>
+ <button type="submit" class="btn btn-danger">삭제</button>
+</form>
+```
+
+views.py
+
+```python
+def delete(request):
+    #print(request.POST['id'])
+    b=board.objects.get(id=request.POST['id'])
+    b.delete()
+    return HttpResponseRedirect(reverse('list'))
+```
+
+urls.py
+
+```python
+urlpatterns = [
+    path('', views.index, name='list'),
+    path('write/', views.index3),
+    path('create', views.create),
+    path('delete/', views.delete),
+]
+```
+
+### 수정 버튼
+
+updtae.html 만들기(write와 유사)
+
+```html
+    <div class='container'>
+      <form action='../modify/' method='POST'> <!--제출하면 넘어가는 페이지 설정,입력한 것을 post 방식으로 서버로 넘김-->
+        {% csrf_token %}
+        <input type='hidden' name='id' value={{post.id}}>
+        <div class="form-group">
+          <label for="exampleInputPassword1">작성 날짜</label>
+          <input type="date" class="form-control" id='now_date' name='createDate' value="{{post.createDate | date:'Y-m-d'}}"><!--네임변수 꼭 지정해줘야함!!! 그래야 post방식으로 전달 시 변수 사용함-->
+         
+         
+        </div>
+        <div class="form-group">
+          <label for="exampleInputEmail1">작성자</label>
+          <input type="text" class="form-control" placeholder="작성자" name='user' value={{post.writer}}>
+        </div>
+        <div class="form-group">
+          <label for="exampleInputPassword1">글 제목</label>
+          <input type="text" class="form-control" name='subject' value={{post.subject}}>
+        </div>
+        <div class="form-group">
+          <label for="exampleInputFile">게시글</label>
+          <textarea class="form-control" rows=10 name='content' >{{post.content}}</textarea>
+        <button type="submit" class="btn btn-default">수정</button>
+      </form>
+    </div>
+  </body>
+
+</html>
+```
+
+list.html
+
+```html
+<a href='update/?id={{row.id}}'>
+	<button type="submit" class="btn btn-warning">수정</button>
+</a>
+```
+
+```html
+<a href='update/?id={{row.id}}'>  <!--아이디를 url로 보내줌, GET으로 보내줌-->
+```
+
+views.py
+
+```python
+def update(request):
+    # print('id:',request.GET['id'])
+    post=board.objects.get(id=request.GET['id'])
+    content={'post':post}
+    return render(request,'board_app/update.html',content)
+
+
+def modify(request):
+    post=board.objects.get(id=request.POST['id'])
+    post.createDate=request.POST['createDate']
+    post.writer=request.POST['user']
+    post.subject=request.POST['subject']
+    post.content=request.POST['content']
+    post.save()
+
+    return HttpResponseRedirect(reverse('list'))
+```
+
+urls.py
+
+```python
+urlpatterns = [
+    path('', views.index, name='list'),
+    path('write/', views.index3),
+    path('create', views.create),
+    path('delete/', views.delete),
+    path('update/', views.update),
+    path('modify/', views.modify),
+]
+```
 
