@@ -904,3 +904,422 @@ urlpatterns = [
 ]
 ```
 
+### 게시글 내용 보기
+
+urls.py
+
+```python
+urlpatterns = [
+    path('', views.index, name='list'),
+    path('write/', views.index3),
+    path('create', views.create),
+    path('delete/', views.delete),
+    path('update/', views.update),
+    path('modify/', views.modify),
+    path('view/', views.view),
+]
+```
+
+views.py
+
+```python
+def view(request):
+    post=board.objects.get(id=request.GET['id'])
+    content={'post':post}
+    return render(request,'board_app/view.html',content)
+```
+
+view.html 만들기 (update와 거의 동일)
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    {% load static %}
+    <link type='text/css' rel='stylesheet' href='{% static "bootstrap.min.css" %}' />
+    <link type='text/css' rel='stylesheet' href='{% static "bootstrap-theme.min.css" %}' />
+    <link type='text/css' rel='stylesheet' href='{% static "list.css" %}' />
+
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/board/">아주 간단한 게시판</a> <!--절대경로 /board/-->
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <div class="navbar-form navbar-right">
+            <button type="submit" class="btn btn-info">Sign in</button>
+            <button type="submit" class="btn btn-success">Sign up</button>
+          </div>
+        </div><!--/.navbar-collapse -->
+      </div>
+    </nav>
+
+    <hr> <!--가로선-->
+
+
+    <div class='container'>
+      <form> 
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="exampleInputPassword1">작성 날짜</label>
+          <input type="date" class="form-control" id='now_date' name='createDate' value="{{post.createDate | date:'Y-m-d'}}" readonly><!--네임변수 꼭 지정해줘야함!!! 그래야 post방식으로 전달 시 변수 사용함-->
+
+        </div>
+        <div class="form-group">
+          <label for="exampleInputEmail1">작성자</label>
+          <input type="text" class="form-control" placeholder="작성자" name='user' value={{post.writer}} readonly>
+        </div>
+        <div class="form-group">
+          <label for="exampleInputPassword1">글 제목</label>
+          <input type="text" class="form-control" name='subject' value={{post.subject}} readonly>
+        </div>
+        <div class="form-group">
+          <label for="exampleInputFile">게시글</label>
+          <textarea class="form-control" rows=10 name='content' readonly>{{post.content}}</textarea>
+          <button type="submit" class="btn btn-default">수정</button>
+      </form>
+    </div>
+  </body>
+
+</html>
+```
+
+### 템플릿 상속
+
+base.html
+
+- 모든 페이지가 공통적으로 가지는 코드
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    {% load static %}
+    <link type='text/css' rel='stylesheet' href='{% static "bootstrap.min.css" %}' />
+    <link type='text/css' rel='stylesheet' href='{% static "bootstrap-theme.min.css" %}' />
+    <link type='text/css' rel='stylesheet' href='{% static "list.css" %}' />
+  </head>
+
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/board/">아주 간단한 게시판</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <div class="navbar-form navbar-right">
+            <button type="submit" class="btn btn-info">Sign in</button>
+            <button type="submit" class="btn btn-success">Sign up</button>
+          </div>
+        </div><!--/.navbar-collapse -->
+      </div>
+    </nav>
+
+    <hr>
+
+    <!-- 
+      템플릿 태그를 삽입
+      해당 템플릿 태그 사이에는 개별적으로 표현되는 내용이 들어가게 됩니다. 
+    -->
+    {% block content %}
+    {% endblock %}
+
+  </body>
+</html>
+```
+
+다른 html들 설정
+
+```html
+{% extends 'board_app/base.html' %}
+{% block content %}
+
+...
+
+{% endblock %}
+```
+
+### 사용자 인증
+
+#### 관리자 -superuser
+
+```
+Username (leave blank to use 'user'): admin
+Email address:
+Password:
+Password (again): 
+This password is too short. It must contain at least 8 
+characters.
+This password is too common.
+This password is entirely numeric.
+Bypass password validation and create user anyway? [y/N]: y
+Superuser created successfully.
+```
+
+127.0.0.1:8000/admin/login 여기에 로그인
+
+#### 일반 계정
+
+```
+(multicampus) C:\hw\workspace\board>python manage.py shell
+Python 3.10.0 | packaged by conda-forge | (default, Nov 10 2021, 13:20:59) [MSC v.1916 64 bit (AMD64)] on win32Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+>>> from django.contrib.auth.models import User
+>>> user=User.objects.create_user('user1','','1234')
+>>> user.save()
+```
+
+#### sign up
+
+signup.html
+
+```html
+<!DOCTYPE html>
+
+<html>
+  <head>
+    {% load static %}
+    <!-- bootstrap css 적용 -->
+    <link type='text/css' rel='stylesheet' href='{% static "bootstrap.min.css" %}' />
+    <link type='text/css' rel='stylesheet' href='{% static "bootstrap-theme.min.css" %}' />
+    <link type='text/css' rel='stylesheet' href='{% static "list.css" %}' />
+  </head>
+
+  <body>
+    <div class='container'>
+      <form class='form-horizontal' method='POST' action='../createUser/'>
+        {% csrf_token %}
+        <div class='form-group'>
+          <label for="inputId" class="col-xs-4 col-md-4 control-label">ID</label>
+          <div class='col-xs-4 col-md-4'>
+            <input class="form-control" type='text' name='id' id='inputId'>
+          </div>
+        </div>
+        <div class='form-group'>
+          <label for="inputPw" class="col-xs-4 col-sm-4 control-label">PW</label>
+          <div class='col-xs-4 col-md-4'>
+            <input class="form-control" type='password' name='pw' id='inputPw'>
+          </div>
+        </div>
+        <div class='form-group'>
+          <div class='col-xs-offset-4 col-md-offset-4 col-xs-10 col-md-10'>
+            <button class="btn btn-default" type='submit'> 회원가입 </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>
+```
+
+accounts/views.py
+
+```python
+def signin(request):
+    return render(request,'accounts/signin.html')
+
+def signup(request):
+    return render(request,'accounts/signup.html')
+
+def createUser(request):
+    id=request.POST['id']
+    pw=request.POST['pw']
+    user=User(username=id,password=pw)
+    user.save()
+    return HttpResponseRedirect(reverse('list'))
+```
+
+accounts/urls.py
+
+```python
+urlpatterns = [
+    path('signin/', views.signin),
+    path('signup/', views.signup),
+    path('createUser/',views.createUser),
+
+]
+```
+
+#### sign in (login)
+
+accounts/urls.py
+
+```python
+from board_app import views as board_views
+from django.contrib.auth import views as auth_views # 로그인 기능이 설정되어 있음
+
+urlpatterns = [
+    path('signin/', auth_views.LoginView.as_view(template_name='accounts/signin.html')),
+    path('signup/', views.signup),
+    path('createUser/',views.createUser),
+    path('profile/',board_views.index),
+]
+```
+
+signin.index
+
+```html
+<!DOCTYPE html>
+
+<html>
+  {% load static %}
+  <link type='text/css' rel='stylesheet' href='{% static "bootstrap.min.css" %}' />
+  <link type='text/css' rel='stylesheet' href='{% static "bootstrap-theme.min.css" %}' />
+  <link type='text/css' rel='stylesheet' href='{% static "list.css" %}' />
+</head>
+
+
+
+...
+
+
+
+          <div class='col-xs-4 col-md-4'>
+            <input class="form-control" type='text' name='username' id='inputId'>
+          </div>
+        </div>
+        <div class='form-group'>
+          <label for="inputPw" class="col-xs-4 col-sm-4 control-label">PW</label>
+          <div class='col-xs-4 col-md-4'>
+            <input class="form-control" type='password' name='password' id='inputPw'>
+
+```
+
+
+
+#### 로그인, 로그아웃 후 board로 이동하고 싶으면?
+
+settings.py
+
+```python
+#로그인 이후에 이동할 URL
+LOGIN_REDIRECT_URL='/board/'
+
+# 로그아웃 이후 이동할 url
+LOGOUT_REDIRECT_URL='/board/'
+```
+
+#### 로그인 후에 게시글 작성하게 만들기
+
+views.py
+
+```python
+from django.shortcuts import render
+from django.http import HttpResponse,HttpResponseRedirect
+from django.urls import reverse
+
+from board_app.models import board
+
+
+# Create your views here.
+
+def index(request):
+    #db의 board 테이블의 모든 내용을 가져옴
+    rows=board.objects.all()
+    content={'rows':rows}
+    
+    return render(request,'board_app/list.html', content)
+
+def index3(request):
+    return render(request,'board_app/write.html')
+
+
+from django.contrib.auth.decorators import login_required
+# 데코레이터를 이용해 로그인이 필요한 함수라는 것을 정의함
+@login_required(login_url='/accounts/signin/') #로그인 안되어있으면 로그인페이지로 이동
+def create( request):
+    new=board(
+        createDate=request.POST['createDate'],
+        user=request.user,
+        subject=request.POST['subject'],
+        content=request.POST['content'],
+    )
+    new.save()
+    return HttpResponseRedirect(reverse('list'))
+    # return HttpResponset('게시글을 작성합니다')
+
+@login_required(login_url='/accounts/signin/')   
+def delete(request):
+    #print(request.POST['id'])
+    b=board.objects.get(id=request.POST['id'])
+    b.delete()
+    return HttpResponseRedirect(reverse('list'))
+
+@login_required(login_url='/accounts/signin/')
+def update(request):
+    # print('id:',request.GET['id'])
+    post=board.objects.get(id=request.GET['id'])
+    content={'post':post}
+    return render(request,'board_app/update.html',content)
+
+@login_required(login_url='/accounts/signin/')
+def modify(request):
+    post=board.objects.get(id=request.POST['id'])
+    post.createDate=request.POST['createDate']
+    post.writer=request.POST['user']
+    post.subject=request.POST['subject']
+    post.content=request.POST['content']
+    post.save()
+
+    return HttpResponseRedirect(reverse('list'))
+
+def view(request):
+    post=board.objects.get(id=request.GET['id'])
+    content={'post':post}
+    return render(request,'board_app/view.html',content)
+
+```
+
+#### 허용된 사용자만 수정 삭제 가능하게 하기
+
+alert.html 만들기
+
+```html
+<!DOCTYPE html> 
+
+<html>
+    <body>
+        <script>
+            alert('권한없는 요청');
+            location.href='/board/';
+        </script>
+    </body>
+</html>
+```
+
+board_app/views.py
+
+```python
+from django.contrib import messages
+@login_required(login_url='/accounts/signin/')
+def modify(request):
+
+
+    post=board.objects.get(id=request.POST['id'])
+    if request.user != post.user:
+        return render(request,'board_app/alert.html')
+    else:
+        post.createDate=request.POST['createDate']
+        post.writer=request.POST['user']
+        post.subject=request.POST['subject']
+        post.content=request.POST['content']
+        post.save()
+
+        return HttpResponseRedirect(reverse('list'))
+```
+
