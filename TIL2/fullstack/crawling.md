@@ -241,19 +241,120 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 
+
+options=webdriver.ChromeOptions()
+options.add_experimental_option('excludeSwitches',['enable-logging'])
 # webdriver -> 직접 브라우저 제어
 # 크롬 기준으로 버전 맞춰서 다운로드
-# service=Service(executable_path="c:\\hw\\workspace\\chromedriver.exe")
-# browser=webdriver.Chrome(service=service)
+service=Service(executable_path="c:\\hw\\workspace\\chromedriver.exe")
+browser=webdriver.Chrome(service=service, options=options)
 
+url = 'http://www.naver.com'
+#browser.get(url)
 
-# url = '사이트'
+#FT쌤 설명
+#executable_path = "./chromedriver.exe"
+#browser = webdriver.Chrome(executable_path = executable_path)
+ 
+browser.get(url)
 
-# webdriver
-executable_path = "./chromedriver.exe"
-browser = webdriver.Chrome(executable_path = executable_path) 
-browser.get('https://www.google.com')
+element = browser.find_element(By.CSS_SELECTOR, 'input#query')
 ```
 
+검색어 입력 후 엔터
+
+```python
+element.send_keys('검색어')
+element.send_keys('\n')
+```
+
+```python
+#검색어 입력 후 마우스 클릭
+# 클릭 가능한 요소라면 클릭이 가능
+input = browser.find_element(By.CSS_SELECTOR, 'input#query')
+button = browser.find_element(By.CSS_SELECTOR, 'button#search_btn')
+input.send_keys('검색어')
+button.click()
+```
+
+새로운 입력어 검색 시
+
+```python
+input = browser.find_element(By.CSS_SELECTOR, 'input#query')
+button = browser.find_element(By.CSS_SELECTOR, 'button#search_btn')
+input.send_keys('검색어')
+button.click()
+
+input2 = browser.find_element(By.CSS_SELECTOR, 'input#nx_query')
+input2.clear()
+input2.send_keys('두번째 검색어')
+```
+
+### 옥션 사이트 스크래핑
+
+```python
+#쇼핑몰 후기-옥션
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service
+
+options = webdriver.ChromeOptions()
+options.add_experimental_option('excludeSwitches', ['enable-logging'])
+# webdriver -> 직접 브라우저 제어
+# 크롬 기준으로 버전 맞춰서 다운로드
+service=Service(executable_path="c:\\hw\\workspace\\chromedriver.exe")
+browser=webdriver.Chrome(service=service, options=options)
+
+url = '옥션사이트'
+
+browser.get(url)
+
+review_button = browser.find_element(By.CSS_SELECTOR, 'li#tap_moving_2 a')
+review_button.click()
 
 
+elements = browser.find_elements(By.CSS_SELECTOR,'ul.list__review p.text')
+for element in elements:
+    print(element.text)
+```
+
+### mlp 스크래핑
+
+```python
+#mlp
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service
+import time
+
+url = 'mlp사이트'
+browser.get(url)
+
+time.sleep(10) #페이지 로딩되는 시간을 더 길게 설정- 2초동안 대기
+#inputs=browser.find_elements(By.CSS_SELECTOR,'div.input-row-line input')
+#inputs[0].send_keys('아이디')
+#inputs[1].send_keys('비번')
+
+#inputs=browser.find_elements(By.CSS_SELECTOR,'div.btn-row button.login-btn')
+#loginButton = browser.find_element(By.CSS_SELECTOR, 'div.btn-row button.login-btn')
+#loginButton.click
+
+#무한 스크롤 - 모든 내용을 스크래핑하고 싶을때
+last_height=browser.execute_script('return document.body.scrollHeight') #초기 스크롤높이
+while True: #무한반복
+    browser.execute_script('window.scrollTo(0, document.body.scrollHeight);') #스크롤높이만큼 내려줌
+    time.sleep(2) #로딩되는 동안 기다려줌
+    new_height=browser.execute_script('return document.body.scrollHeight') # 새로운 높이 재기
+
+    #새로운 높이가 이전과 같을 경우 더 이상 내려갈 수 없음
+    if new_height == last_height: break
+    last_height = new_height
+    
+# 로드된 내용들을 수집
+articles = browser.find_elements(By.CSS_SELECTOR, 'div.feedlist span article')
+for article in articles:
+  for content in article.find_elements(By.CSS_SELECTOR, 'span.feedContentBlk span'):
+    print( content.text)
+```
