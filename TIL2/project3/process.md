@@ -363,5 +363,135 @@
 # 2022년 03월 17일
 
 ## 공부
+### 라벨링
+[관련링크](https://colinch4.github.io/2020-12-04/LabelImg/)
+[링크2](https://developeryoung.tistory.com/16)
+1. labelImg 설치 (https://github.com/tzutalin/labelImg )
+2. 아나콘다 관리자 권한 프롬프트에서 밑에 코드 실행
+	- 이 때 가상환경 설정한 후 진행(multicampus)
+```
+cd C:\Users\User\Desktop\labelImg\labelImg-master # 예시
+conda install pyqt=5
+conda install -c anaconda lxml
+pyrcc5 -o libs/resources.py resources.qrc
+```
+3. `C:\Users\User\Desktop\labelImg\labelImg-master` 에 생성된 resources.py 와  resources.qrc 를 `C:\Users\User\Desktop\labelImg\labelImg-master\libs`로 직접 옮겨준 후 밑에 코드 실행
+```
+pip install labelImg
+labelImg
+conda install python==3.9 #파이썬 버전이 3.10이 넘어가면 실행이 안됨
+```
+4. open dir에서 사진 파일 가져오고
+5. change save dir에서 저장 폴더 지정
+	- w : rectbox 생성
+	- d : 다음 사진
+	- a : 이전 사진
+	- 꼭 YOLO로 설정하고 만들어야함 -> txt파일로 저장되게끔
+6. (labelImg_master 폴더를 C드라이브로 옮겨놓기도 함->구글링)
+
+### 욜로 튜토리얼
+- [yolo tutorial](https://www.youtube.com/watch?v=NU9Xr_NYslo)
+- [yolo tutorial - 한국어](https://lynnshin.tistory.com/47)
+- [풍선 판단 예시](https://www.kaggle.com/vbookshelf/basics-of-yolo-v5-balloon-detection/notebook)
+
+### Yolact 사용
+- [튜토리얼 참고](https://blog.naver.com/9503090_/221994950839)
+- 근데 완벽하게 다른 객체로 판단하지 않는듯
+- 그 대신 픽셀 단위?로 더 정확하게 분류는 함
+- 근데 예시가 너무 적어서 따라하기 힘듦
+## 회의
+- YOLOv5
+  - 결과저장해보기 성공
+  - 직접 라벨링해보기 확인, 같이 해서 박스 그려야됨
+  - 빈자리 구분
+     - 영상을 우선 찍어보자 빠르게
+	   - 무중력 지대 대방동
+       - 월-금 10:00-21:00 / 토 10:00-16:00 (일요일, 공휴일 정기휴관) 현재 코로나19 단계에 따라 단축 운영중입니다.
+	 - 결과나오는거에 좌표까지 표시된다면 구분이 좀더 쉽지않을까?
+	 - 안되면 노가다로 다 테이블을 지정?
+- 캠
+   - 주피터에서 캠 확인, 오늘 실패
+   - 내일 더 해보기
+   - Flutter로 실시간 영상 보내기 확인
+   - 주피터에서 안된다면 로컬에서 진행 후 깃허브로 공유하는 방법으로
+- Flutter,Django
+   - 장고 페이지 확인
+   - 플러터랑 연동 해보기
+
+# 2022년 03월 18일
+## 공부
+- 좌표 파악 -> 데이터 가져올 수 있는지?
+- 아니면 테이블 별로 구분이 가능할지?
+
+- (x,y,w,h)=(bounding box 중심점의 x,bounding box 중심점의 y,bouding box의 W, bounding box의 H)
+![yolo 좌표](https://media.vlpt.us/images/jaeha0725/post/530b56bf-7373-43bc-b432-28a0ef54feae/image.png)
+## 회의
+- [mask R-CNN]](https://reyrei.tistory.com/12)
+- [object tracking and counting](https://blog.naver.com/dldudcks1779/222071049946)
+- [동영상 프레임 자르기](https://sj-d.tistory.com/24)
+
+
+- Mask R-CNN → 개체 분류 가능
+- Panoptic Segmentation
+- 선긋기
+이것들 중 하나 선택해보기
+
+
+# 2022년 03월 21일
+## 공부
+-[이론](https://www.analyticsvidhya.com/blog/2021/12/how-to-use-yolo-v5-object-detection-algorithm-for-custom-object-detection-an-example-use-case/)
+### 객체 분류
+- [객체 수 카운팅](https://github.com/tugot17/YOLO-Object-Counting-API)
+- [객체 수 카운팅2](https://github.com/dldudcks1779/Object-Tracking-and-Counting)
+	- 코드 분석하기
+
+
+```
+ # 사람인 경우
+         if classID == 0: # yolo-coco 디렉터리에 coco.names 파일을 참고하여 다른 object 도 인식 가능(0 인 경우 사람)
+                    # 객체 확률이 최소 확률보다 큰 경우
+                    if confidence > args["confidence"]:
+                        # bounding box 위치 계산
+                        box = detection[0:4] * np.array([W, H, W, H])
+                        (centerX, centerY, width, height) = box.astype("int") # (중심 좌표 X, 중심 좌표 Y, 너비(가로), 높이(세로))
+
+                        # bounding box  좌표
+                        startX = int(centerX - (width / 2))
+                        startY = int(centerY - (height / 2))
+                        endX = int(centerX + (width / 2))
+                        endY = int(centerY + (height / 2))
+            
+                        # 객체 추적 정보 추출
+                        tracker = dlib.correlation_tracker()
+                        rect = dlib.rectangle(startX, startY, endX, endY)
+                        tracker.start_track(rgb, rect)
+                
+                        # 인식된 객체를 추적 목록에 추가
+                        trackers.append(tracker)
+```
+0(person), 24(backpack) ,25(umbrella), 26(handbag), 28(suitcase), 39(bottle), 41(cup), 42(fork), 43(knife), 44(spoon), 45(bowl), 63(laptop), 64(mouse), 65(remote), 66(keyboard), 67(cell phone),73(book)
+ - 이것을 인식하게끔 설정하면 될듯
+ 
+ -deep sort : counting 알고리즘
+ - cfg : 네트워크 구조
 
 ## 회의
+### 사이언스
+- object counting 코드 분석
+
+### 엔지니어
+- Flutter와 YOLOv5 연동
+  - 플러터 설치 
+  - 카메라 연동, YOLOv5 구동
+
+### 정리
+- 실시간 -> 마스크
+- 앱 구동 -> 빈자리(aws 가능)?
+
+
+# 2022년 03월 22일
+## 공부
+- 수요일에 어떤 식으로 영상 찍을지?
+- 공부한 내용 파악
+	- 궁금한점 : 대부분의 에시가 이분할인데... 6분할 가능?
+	- 차선 인지도 구경하고 있긴 함
