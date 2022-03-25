@@ -548,3 +548,9 @@ ffmpeg.exe -i C:\Users\user\Desktop\ffmpeg-5.0-essentials_build\ffmpeg-5.0-essen
 - 내일 이야기할 것들
 	- 바운딩박스 기준(이목구비만 or 머리 전체)
 	- 탐지 불가를 어떻게 라벨링 할지?
+
+- 라벨링 진행
+ 	- mask, nomask,error, MASK, NOMASK
+	- 소문자는 얼굴만, 대문자는 상반신 일부포함
+		- error 사진을 구분하기 위함
+		- 나중에 소문자 / 대문자 중 하나 선택 예정
